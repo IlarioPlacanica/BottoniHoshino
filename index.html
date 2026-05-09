@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bottoni Hoshino</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <section class="scene" aria-label="Scena principale">
+      <img
+        id="background-image"
+        class="scene-media scene-image"
+        src="Assets/img/background.png"
+        alt=""
+      >
+
+      <video
+        id="button-video"
+        class="scene-media scene-video"
+        playsinline
+        preload="auto"
+        poster="Assets/img/background.png"
+      >
+        <source src="Assets/video/ButtonLeft.mp4" type="video/mp4">
+        Il tuo browser non supporta il video.
+      </video>
+
+      <section class="hero-copy" aria-label="Testo principale">
+        <h1>
+          CIAO PUTI
+          <br>
+          CLICCA SUI BOTTONI
+          <br>
+          PER VEDERE LE ANIMAZIONI
+        </h1>
+      </section>
+
+      <button
+        id="hotspot-left"
+        class="hotspot hotspot-left"
+        type="button"
+        aria-label="Riproduci animazione ButtonLeft"
+      ></button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
