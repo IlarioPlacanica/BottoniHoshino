@@ -6,8 +6,8 @@ const sourceVideos = Array.from(document.querySelectorAll(".source-video[data-bu
 const videoByButton = new Map(sourceVideos.map((video) => [video.dataset.button, video]));
 const primePromises = new Map();
 const backgroundSources = [
-  "Assets/img/Background.png",
   "Assets/img/background.png",
+  "Assets/img/Background.png",
 ];
 let activeVideo = null;
 let renderToken = 0;
