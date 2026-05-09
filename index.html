@@ -12,18 +12,45 @@
       <img
         id="background-image"
         class="scene-media scene-image"
-        src="Assets/img/background.png"
+        src="Assets/img/Background.png"
         alt=""
       >
 
+      <canvas
+        id="scene-canvas"
+        class="scene-media scene-canvas"
+        width="1200"
+        height="2670"
+        aria-hidden="true"
+      ></canvas>
+
       <video
-        id="button-video"
-        class="scene-media scene-video"
+        class="source-video"
+        data-button="left"
         playsinline
         preload="auto"
-        poster="Assets/img/background.png"
       >
         <source src="Assets/video/ButtonLeft.mp4" type="video/mp4">
+        Il tuo browser non supporta il video.
+      </video>
+
+      <video
+        class="source-video"
+        data-button="center"
+        playsinline
+        preload="auto"
+      >
+        <source src="Assets/video/ButtonCenter.mp4" type="video/mp4">
+        Il tuo browser non supporta il video.
+      </video>
+
+      <video
+        class="source-video"
+        data-button="right"
+        playsinline
+        preload="auto"
+      >
+        <source src="Assets/video/ButtonRight.mp4" type="video/mp4">
         Il tuo browser non supporta il video.
       </video>
 
@@ -38,10 +65,24 @@
       </section>
 
       <button
-        id="hotspot-left"
         class="hotspot hotspot-left"
+        data-button="left"
         type="button"
         aria-label="Riproduci animazione ButtonLeft"
+      ></button>
+
+      <button
+        class="hotspot hotspot-center"
+        data-button="center"
+        type="button"
+        aria-label="Riproduci animazione ButtonCenter"
+      ></button>
+
+      <button
+        class="hotspot hotspot-right"
+        data-button="right"
+        type="button"
+        aria-label="Riproduci animazione ButtonRight"
       ></button>
     </section>
   </main>

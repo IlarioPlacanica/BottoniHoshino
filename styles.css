@@ -3,9 +3,13 @@
   --copy-shadow: rgba(15, 10, 8, 0.7);
   --scene-width: 1200;
   --scene-height: 2670;
-  --hotspot-size: 15%;
-  --hotspot-left: 21.5%;
-  --hotspot-top: 83.2%;
+  --hotspot-size: 17%;
+  --hotspot-left-x: 21.5%;
+  --hotspot-left-y: 83.2%;
+  --hotspot-center-x: 50.6%;
+  --hotspot-center-y: 86.2%;
+  --hotspot-right-x: 76.8%;
+  --hotspot-right-y: 82.6%;
   --hotspot-overlay: rgba(78, 215, 255, 0.14);
   --hotspot-border: rgba(255, 255, 255, 0.18);
 }
@@ -50,24 +54,36 @@ body {
 .scene-media {
   position: absolute;
   inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: fill;
 }
 
 .scene-image {
   z-index: 1;
+  object-fit: fill;
 }
 
-.scene-video {
+.scene-canvas {
   z-index: 2;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 80ms linear;
+  background: transparent;
 }
 
-.scene.is-playing .scene-video {
+.scene-canvas.is-active {
   opacity: 1;
+}
+
+.source-video {
+  position: absolute;
+  inset: auto;
+  left: -9999px;
+  top: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .hero-copy {
@@ -102,26 +118,35 @@ body {
   border-radius: 12px;
   background: var(--hotspot-overlay);
   transform: translate(-50%, -50%);
+  opacity: 0;
   cursor: pointer;
-  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
+  transition: background-color 160ms ease, border-color 160ms ease;
 }
 
 .hotspot:hover,
 .hotspot:focus-visible {
   background: rgba(78, 215, 255, 0.22);
   border-color: rgba(255, 255, 255, 0.35);
-  transform: translate(-50%, -50%) scale(1.04);
   outline: none;
 }
 
 .hotspot-left {
-  left: var(--hotspot-left);
-  top: var(--hotspot-top);
+  left: var(--hotspot-left-x);
+  top: var(--hotspot-left-y);
+}
+
+.hotspot-center {
+  left: var(--hotspot-center-x);
+  top: var(--hotspot-center-y);
+}
+
+.hotspot-right {
+  left: var(--hotspot-right-x);
+  top: var(--hotspot-right-y);
 }
 
 .hotspot:disabled {
   cursor: default;
-  transform: translate(-50%, -50%);
 }
 
 @media (max-width: 700px) {

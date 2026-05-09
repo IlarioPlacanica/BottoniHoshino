@@ -1,7 +1,13 @@
-const scene = document.querySelector(".scene");
-const hotspotLeft = document.getElementById("hotspot-left");
-const buttonVideo = document.getElementById("button-video");
-let primePromise = null;
+const hotspotButtons = Array.from(document.querySelectorAll(".hotspot[data-button]"));
+const sceneCanvas = document.getElementById("scene-canvas");
+const canvasContext = sceneCanvas.getContext("2d");
+const sourceVideos = Array.from(document.querySelectorAll(".source-video[data-button]"));
+const videoByButton = new Map(sourceVideos.map((video) => [video.dataset.button, video]));
+const primePromises = new Map();
+let activeVideo = null;
+let renderToken = 0;
+
+canvasContext.imageSmoothingEnabled = true;
 
 function waitForEvent(target, eventName) {
   return new Promise((resolve, reject) => {
@@ -25,65 +31,151 @@ function waitForEvent(target, eventName) {
   });
 }
 
-async function prepareVideo() {
-  if (buttonVideo.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
-    await waitForEvent(buttonVideo, "loadeddata");
+function seekVideoToStart(video) {
+  if (Math.abs(video.currentTime) < 0.01) {
+    return Promise.resolve();
   }
 
-  if (buttonVideo.currentTime !== 0) {
-    await new Promise((resolve) => {
-      const handleSeeked = () => {
-        resolve();
-      };
+  return new Promise((resolve) => {
+    const handleSeeked = () => {
+      resolve();
+    };
 
-      buttonVideo.addEventListener("seeked", handleSeeked, { once: true });
-      buttonVideo.currentTime = 0;
+    video.addEventListener("seeked", handleSeeked, { once: true });
+    video.currentTime = 0;
+  });
+}
+
+async function prepareVideo(video) {
+  if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+    await waitForEvent(video, "loadeddata");
+  }
+
+  await seekVideoToStart(video);
+  video.pause();
+}
+
+function primeVideo(video) {
+  if (!primePromises.has(video)) {
+    const primePromise = prepareVideo(video).finally(() => {
+      primePromises.delete(video);
     });
+
+    primePromises.set(video, primePromise);
   }
 
-  buttonVideo.pause();
+  return primePromises.get(video);
 }
 
-function primeVideo() {
-  if (!primePromise) {
-    primePromise = prepareVideo().finally(() => {
-      primePromise = null;
-    });
-  }
-
-  return primePromise;
+function clearCanvas() {
+  canvasContext.clearRect(0, 0, sceneCanvas.width, sceneCanvas.height);
 }
 
-function resetScene() {
-  buttonVideo.pause();
-  scene.classList.remove("is-playing");
-  hotspotLeft.disabled = false;
-  void primeVideo();
-}
-
-async function playPressedAnimation() {
-  if (scene.classList.contains("is-playing")) {
+function drawVideoFrame(video) {
+  if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
     return;
   }
 
-  hotspotLeft.disabled = true;
+  clearCanvas();
+  canvasContext.drawImage(video, 0, 0, sceneCanvas.width, sceneCanvas.height);
+}
+
+function scheduleCanvasRender(video, token) {
+  const drawNextFrame = () => {
+    if (token !== renderToken || activeVideo !== video) {
+      return;
+    }
+
+    drawVideoFrame(video);
+
+    if (video.paused || video.ended) {
+      return;
+    }
+
+    if (typeof video.requestVideoFrameCallback === "function") {
+      video.requestVideoFrameCallback(() => {
+        drawNextFrame();
+      });
+      return;
+    }
+
+    requestAnimationFrame(drawNextFrame);
+  };
+
+  drawNextFrame();
+}
+
+function resetScene() {
+  renderToken += 1;
+
+  if (!activeVideo) {
+    hotspotButtons.forEach((button) => {
+      button.disabled = false;
+    });
+    sceneCanvas.classList.remove("is-active");
+    clearCanvas();
+    return;
+  }
+
+  const finishedVideo = activeVideo;
+  activeVideo = null;
+
+  finishedVideo.pause();
+  sceneCanvas.classList.remove("is-active");
+  clearCanvas();
+
+  hotspotButtons.forEach((button) => {
+    button.disabled = false;
+  });
+
+  void primeVideo(finishedVideo);
+}
+
+async function playPressedAnimation(event) {
+  if (activeVideo) {
+    return;
+  }
+
+  const selectedButton = event.currentTarget;
+  const videoKey = selectedButton.dataset.button;
+  const selectedVideo = videoByButton.get(videoKey);
+
+  if (!selectedVideo) {
+    return;
+  }
+
+  activeVideo = selectedVideo;
+  renderToken += 1;
+  const token = renderToken;
+
+  hotspotButtons.forEach((button) => {
+    button.disabled = true;
+  });
 
   try {
-    await primeVideo();
-    scene.classList.add("is-playing");
+    await primeVideo(selectedVideo);
+    drawVideoFrame(selectedVideo);
+    sceneCanvas.classList.add("is-active");
 
-    const playPromise = buttonVideo.play();
+    const playPromise = selectedVideo.play();
 
     if (playPromise instanceof Promise) {
       await playPromise;
     }
+
+    scheduleCanvasRender(selectedVideo, token);
   } catch {
     resetScene();
   }
 }
 
-hotspotLeft.addEventListener("click", playPressedAnimation);
-buttonVideo.addEventListener("ended", resetScene);
-buttonVideo.addEventListener("error", resetScene);
-buttonVideo.load();
-void primeVideo();
+hotspotButtons.forEach((button) => {
+  button.addEventListener("click", playPressedAnimation);
+});
+
+sourceVideos.forEach((video) => {
+  video.addEventListener("ended", resetScene);
+  video.addEventListener("error", resetScene);
+  video.load();
+  void primeVideo(video);
+});
