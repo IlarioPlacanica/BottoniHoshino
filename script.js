@@ -1,13 +1,38 @@
+const backgroundImage = document.getElementById("background-image");
 const hotspotButtons = Array.from(document.querySelectorAll(".hotspot[data-button]"));
 const sceneCanvas = document.getElementById("scene-canvas");
 const canvasContext = sceneCanvas.getContext("2d");
 const sourceVideos = Array.from(document.querySelectorAll(".source-video[data-button]"));
 const videoByButton = new Map(sourceVideos.map((video) => [video.dataset.button, video]));
 const primePromises = new Map();
+const backgroundSources = [
+  "Assets/img/Background.png",
+  "Assets/img/background.png",
+];
 let activeVideo = null;
 let renderToken = 0;
 
 canvasContext.imageSmoothingEnabled = true;
+
+function ensureBackgroundImage() {
+  let sourceIndex = backgroundSources.indexOf(backgroundImage.getAttribute("src") || "");
+
+  if (sourceIndex < 0) {
+    sourceIndex = 0;
+    backgroundImage.src = backgroundSources[sourceIndex];
+  }
+
+  backgroundImage.addEventListener("error", () => {
+    const nextSource = backgroundSources[sourceIndex + 1];
+
+    if (!nextSource) {
+      return;
+    }
+
+    sourceIndex += 1;
+    backgroundImage.src = nextSource;
+  });
+}
 
 function waitForEvent(target, eventName) {
   return new Promise((resolve, reject) => {
@@ -172,6 +197,8 @@ async function playPressedAnimation(event) {
 hotspotButtons.forEach((button) => {
   button.addEventListener("click", playPressedAnimation);
 });
+
+ensureBackgroundImage();
 
 sourceVideos.forEach((video) => {
   video.addEventListener("ended", resetScene);
